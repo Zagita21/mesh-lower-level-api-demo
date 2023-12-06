@@ -1,3 +1,4 @@
+import { Demo } from "../transactions/demo";
 import { MaestroProvider, MeshTxBuilder } from "@meshsdk/core";
 
 const maestro = new MaestroProvider({ apiKey: process.env.NEXT_PUBLIC_MAESTRO_APIKEY!, network: "Preprod" });
@@ -25,8 +26,28 @@ export default function Home() {
     evaluator: maestro,
   });
 
+  const demo = new Demo(mesh, maestro, {
+    walletAddress,
+    skey,
+    collateralUTxO: {
+      txHash: "3fbdf2b0b4213855dd9b87f7c94a50cf352ba6edfdded85ecb22cf9ceb75f814",
+      outputIndex: 7,
+    },
+  });
+
+  const sendFundToSelf = async () => {
+    const utxo = await getUtxosWithMinLovelace(2000000);
+    const txInHash = utxo[0].input.txHash;
+    const txInId = utxo[0].input.outputIndex;
+    const txHash = await demo.sendFundToSelf(txInHash, txInId, 1000000);
+    console.log("TXHASH", txHash);
+  };
+
   return (
     <main>
+      <button className="m-2 p-2 bg-slate-300" onClick={() => sendFundToSelf()}>
+        Send Self
+      </button>
       <button className="m-2 p-2 bg-slate-300">Send To Always Succeed</button>
       <button className="m-2 p-2 bg-slate-300">Mint Always Succeed</button>
       <button className="m-2 p-2 bg-slate-300">Unlock from + Mint Always Succeed</button>
