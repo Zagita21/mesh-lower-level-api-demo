@@ -1,5 +1,5 @@
 import { Data } from "@meshsdk/core";
-import aikenScripts from "./blueprint.json";
+import aikenScripts from "../../mesh-lower-level-api-demo/plutus.json";
 import { C } from "./libs";
 import { bytesToHex, hexToBytes } from "@sidan-lab/sidan-csl";
 
