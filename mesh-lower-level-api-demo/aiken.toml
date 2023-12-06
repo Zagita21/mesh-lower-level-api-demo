@@ -1,0 +1,14 @@
+name = "sidan-lab/mesh-lower-level-api-demo"
+version = "0.0.0"
+license = "Apache-2.0"
+description = "Aiken contracts for project 'sidan-lab/mesh-lower-level-api-demo'"
+
+[repository]
+user = "sidan-lab"
+project = "mesh-lower-level-api-demo"
+platform = "github"
+
+[[dependencies]]
+name = "aiken-lang/stdlib"
+version = "1.7.0"
+source = "github"

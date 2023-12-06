@@ -1,0 +1,49 @@
+{
+  "preamble": {
+    "title": "sidan-lab/mesh-lower-level-api-demo",
+    "description": "Aiken contracts for project 'sidan-lab/mesh-lower-level-api-demo'",
+    "version": "0.0.0",
+    "plutusVersion": "v2",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.0.20-alpha+49bd4ba"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": [
+    {
+      "title": "minting.always_succeed",
+      "redeemer": {
+        "title": "_redeemer",
+        "schema": {
+          "$ref": "#/definitions/Data"
+        }
+      },
+      "compiledCode": "584501000032323232323222533300432323253330073370e900018041baa0011324a2600c0022c60120026012002600600229309b2b118021baa0015734aae7555cf2ba157441",
+      "hash": "5066154a102ee037390c5236f78db23239b49c5748d3d349f3ccf04b"
+    },
+    {
+      "title": "spending.always_succeed",
+      "datum": {
+        "title": "_datum",
+        "schema": {
+          "$ref": "#/definitions/Data"
+        }
+      },
+      "redeemer": {
+        "title": "_redeemer",
+        "schema": {
+          "$ref": "#/definitions/Data"
+        }
+      },
+      "compiledCode": "5845010000323232323232222533300532323253330083370e900118049baa0011324a2600e0022c60140026014002600800229309b2b118021baa0015734aae7555cf2ba15745",
+      "hash": "7015a591ee0c3bfcecd6a5735ccfa7bf4a19243155080bfd312fecd8"
+    }
+  ],
+  "definitions": {
+    "Data": {
+      "title": "Data",
+      "description": "Any Plutus data."
+    }
+  }
+}
