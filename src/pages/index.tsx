@@ -1,5 +1,5 @@
 import { Demo } from "../transactions/demo";
-import { MaestroProvider, MeshTxBuilder, UTxO, resolvePaymentKeyHash } from "@meshsdk/core";
+import { MaestroProvider, MeshTxBuilder, MeshTxBuilderBody, UTxO, resolvePaymentKeyHash } from "@meshsdk/core";
 import { useWalletList, useWallet, CardanoWallet } from "@meshsdk/react";
 
 const maestro = new MaestroProvider({ apiKey: process.env.NEXT_PUBLIC_MAESTRO_APIKEY!, network: "Preprod" });
@@ -94,11 +94,6 @@ export default function Home() {
 
     const txInHash = utxo[0].input.txHash;
     const txInId = utxo[0].input.outputIndex;
-    const mesh = new MeshTxBuilder({
-      fetcher: maestro,
-      submitter: maestro,
-      evaluator: maestro,
-    });
     await mesh
       .txIn(txInHash, txInId)
       .txOut(myAddress[0], [{ unit: "lovelace", quantity: "2000000" }])
@@ -107,6 +102,62 @@ export default function Home() {
     const builtTx = mesh.completeSigning();
     const signedTx = await wallet.signTx(builtTx, false);
     const txHash = await wallet.submitTx(signedTx);
+    demo.resetTxBody();
+    console.log("TXHASH", txHash);
+  };
+
+  const buildTxFromObject = async () => {
+    const utxos = await maestro.fetchAddressUTxOs(walletAddress);
+    console.log("UTXO", utxos);
+    const txHash1 = utxos[0].input.txHash;
+    const txIndex1 = utxos[0].input.outputIndex;
+    const txHash2 = utxos[1].input.txHash;
+    const txIndex2 = utxos[1].input.outputIndex;
+
+    const meshTxBody: MeshTxBuilderBody = {
+      inputs: [
+        {
+          type: "PubKey",
+          txIn: {
+            txHash: txHash1,
+            txIndex: txIndex1,
+          },
+        },
+        {
+          type: "PubKey",
+          txIn: {
+            txHash: txHash2,
+            txIndex: txIndex2,
+          },
+        },
+      ],
+      outputs: [
+        {
+          address: walletAddress,
+          amount: [{ unit: "lovelace", quantity: "1000000" }],
+        },
+      ],
+      collaterals: [
+        {
+          type: "PubKey",
+          txIn: {
+            txHash: "ee8369ffadd6ed6efdd939639b393f08974fca388b2c43d03a96a1fa4840c5f8",
+            txIndex: 0,
+          },
+        },
+      ],
+      requiredSignatures: [],
+      referenceInputs: [],
+      mints: [],
+      changeAddress: walletAddress,
+      metadata: [],
+      validityRange: {},
+      signingKey: [skey],
+    };
+
+    await mesh.complete(meshTxBody);
+    const signedTx = mesh.completeSigning();
+    const txHash = await maestro.submitTx(signedTx);
     console.log("TXHASH", txHash);
   };
 
@@ -141,6 +192,9 @@ export default function Home() {
       </button>
       <button className="m-2 p-2 bg-slate-500" onClick={frontendTx}>
         Frontend Tx
+      </button>
+      <button className="m-2 p-2 bg-slate-500" onClick={buildTxFromObject}>
+        Build Tx From Object
       </button>
       <button className="m-2 p-2 bg-slate-500" onClick={() => queryUtxos(walletAddress)}>
         Query
