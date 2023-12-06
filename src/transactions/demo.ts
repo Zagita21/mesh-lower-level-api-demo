@@ -1,6 +1,6 @@
 import { IFetcher, MeshTxBuilder, UTxO } from "@meshsdk/core";
 import { applyParamsToScript, blueprint } from "../aiken";
-import { getV2ScriptHash, mConStr0, v2ScriptHashToBech32 } from "@sidan-lab/sidan-csl";
+import { getV2ScriptHash, mConStr0, stringToHex, v2ScriptHashToBech32 } from "@sidan-lab/sidan-csl";
 
 export type InputUTxO = UTxO["input"];
 
@@ -93,19 +93,70 @@ export class Demo {
       console.log("There is no output sitting in validator");
       return "";
     }
-
     const validatorInput: InputUTxO = validatorUtxo[0].input;
 
-    this.mesh
+    await this.mesh
       .txIn(txInHash, txInId)
       .spendingPlutusScriptV2()
       .txIn(validatorInput.txHash, validatorInput.outputIndex)
       .txInInlineDatumPresent()
       .txInRedeemerValue(mConStr0([]))
-      .txInScript(getScriptCbor("Spending"));
-
-    await this.mesh // TODO: change back to pure chain after fix is merged
+      .txInScript(getScriptCbor("Spending"))
       .txOut(this.constants.walletAddress, [])
+      .changeAddress(this.constants.walletAddress)
+      .txInCollateral(this.constants.collateralUTxO.txHash, this.constants.collateralUTxO.outputIndex)
+      .signingKey(this.constants.skey)
+      .complete();
+
+    const txHash = await this.signSubmitReset();
+    return txHash;
+  };
+
+  mintAlwaysSucceed = async (txInHash: string, txInId: number) => {
+    const mintingScript = getScriptCbor("Minting");
+    const policyId = getScriptHash("Minting");
+    const tokenName = stringToHex("LiveCodingTesting");
+    await this.mesh
+      .txIn(txInHash, txInId)
+      .mintPlutusScriptV2()
+      .mint(1, policyId, tokenName)
+      .mintingScript(mintingScript)
+      .mintRedeemerValue(mConStr0([]))
+      .txOut(this.constants.walletAddress, [{ unit: policyId + tokenName, quantity: "1" }])
+      .changeAddress(this.constants.walletAddress)
+      .txInCollateral(this.constants.collateralUTxO.txHash, this.constants.collateralUTxO.outputIndex)
+      .signingKey(this.constants.skey)
+      .complete();
+
+    const txHash = await this.signSubmitReset();
+    return txHash;
+  };
+
+  unlockExample102AndMintAlwaysSucceed = async (txInHash: string, txInId: number) => {
+    const mintingScript = getScriptCbor("Minting");
+    const policyId = getScriptHash("Minting");
+    const tokenName = stringToHex("LiveCodingTestingAtUnlock");
+
+    const validatorAddress = v2ScriptHashToBech32(getScriptHash("Spending"));
+    const validatorUtxo = await this.fetcher.fetchAddressUTxOs(validatorAddress);
+    if (validatorUtxo.length === 0) {
+      console.log("There is no output sitting in validator");
+      return "";
+    }
+    const validatorInput: InputUTxO = validatorUtxo[0].input;
+
+    await this.mesh
+      .txIn(txInHash, txInId)
+      .spendingPlutusScriptV2()
+      .txIn(validatorInput.txHash, validatorInput.outputIndex)
+      .txInInlineDatumPresent()
+      .txInRedeemerValue(mConStr0([]))
+      .txInScript(getScriptCbor("Spending"))
+      .mintPlutusScriptV2()
+      .mint(1, policyId, tokenName)
+      .mintingScript(mintingScript)
+      .mintRedeemerValue(mConStr0([]))
+      .txOut(this.constants.walletAddress, [{ unit: policyId + tokenName, quantity: "1" }])
       .changeAddress(this.constants.walletAddress)
       .txInCollateral(this.constants.collateralUTxO.txHash, this.constants.collateralUTxO.outputIndex)
       .signingKey(this.constants.skey)

@@ -23,7 +23,6 @@ export default function Home() {
   const mesh = new MeshTxBuilder({
     fetcher: maestro,
     submitter: maestro,
-    evaluator: maestro,
   });
 
   const demo = new Demo(mesh, maestro, {
@@ -63,9 +62,21 @@ export default function Home() {
     console.log("TXHASH", txHash);
   };
 
-  const mintAlwaysSucceed = async () => {};
+  const mintAlwaysSucceed = async () => {
+    const utxo = await getUtxosWithMinLovelace(6000000);
+    const txInHash = utxo[0].input.txHash;
+    const txInId = utxo[0].input.outputIndex;
+    const txHash = await demo.mintAlwaysSucceed(txInHash, txInId);
+    console.log("TXHASH", txHash);
+  };
 
-  const unlockExample102AndMintAlwaysSucceed = async () => {};
+  const unlockExample102AndMintAlwaysSucceed = async () => {
+    const utxo = await getUtxosWithMinLovelace(6000000);
+    const txInHash = utxo[0].input.txHash;
+    const txInId = utxo[0].input.outputIndex;
+    const txHash = await demo.unlockExample102AndMintAlwaysSucceed(txInHash, txInId);
+    console.log("TXHASH", txHash);
+  };
 
   return (
     <main>
