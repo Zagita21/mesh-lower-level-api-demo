@@ -59,6 +59,10 @@ export class Demo {
     this.constants = setupConstants;
   }
 
+  resetTxBody = () => {
+    this.mesh.meshTxBuilderBody = makeMeshTxBuilderBody();
+  };
+
   getAlwaysSucceedAddress = () => v2ScriptHashToBech32(getScriptHash("Spending"));
 
   sendFundToSelf = async (txInHash: string, txInId: number, amount: number) => {

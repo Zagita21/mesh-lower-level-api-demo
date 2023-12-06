@@ -1,19 +1,25 @@
 import { Demo } from "../transactions/demo";
-import { MaestroProvider, MeshTxBuilder } from "@meshsdk/core";
+import { MaestroProvider, MeshTxBuilder, UTxO, resolvePaymentKeyHash } from "@meshsdk/core";
+import { useWalletList, useWallet, CardanoWallet } from "@meshsdk/react";
 
 const maestro = new MaestroProvider({ apiKey: process.env.NEXT_PUBLIC_MAESTRO_APIKEY!, network: "Preprod" });
 const walletAddress = process.env.NEXT_PUBLIC_WALLET_ADDRESS!;
 const skey = process.env.NEXT_PUBLIC_SKEY!;
 
 export default function Home() {
+  const { connect, connected, wallet } = useWallet();
+
   const queryUtxos = async (walletAddress: string) => {
     const utxos = await maestro.fetchAddressUTxOs(walletAddress);
     console.log("UTXO", utxos);
     return utxos;
   };
 
-  const getUtxosWithMinLovelace = async (lovelace: number) => {
-    const utxos = await maestro.fetchAddressUTxOs(walletAddress);
+  const getUtxosWithMinLovelace = async (lovelace: number, providedUtxos: UTxO[] = []) => {
+    let utxos: UTxO[] = providedUtxos;
+    if (!providedUtxos || providedUtxos.length === 0) {
+      utxos = await maestro.fetchAddressUTxOs(walletAddress);
+    }
     return utxos.filter((u) => {
       const lovelaceAmount = u.output.amount.find((a: any) => a.unit === "lovelace")?.quantity;
       return Number(lovelaceAmount) > lovelace;
@@ -23,6 +29,7 @@ export default function Home() {
   const mesh = new MeshTxBuilder({
     fetcher: maestro,
     submitter: maestro,
+    evaluator: maestro,
   });
 
   const demo = new Demo(mesh, maestro, {
@@ -78,8 +85,42 @@ export default function Home() {
     console.log("TXHASH", txHash);
   };
 
+  const frontendTx = async () => {
+    const utxos = await wallet.getUtxos();
+    const utxo = await getUtxosWithMinLovelace(3000000, utxos);
+    const myAddress = await wallet.getUnusedAddresses();
+    const changeAddress = await wallet.getChangeAddress();
+    console.log("UTXO", utxo);
+
+    const txInHash = utxo[0].input.txHash;
+    const txInId = utxo[0].input.outputIndex;
+    const mesh = new MeshTxBuilder({
+      fetcher: maestro,
+      submitter: maestro,
+      evaluator: maestro,
+    });
+    await mesh
+      .txIn(txInHash, txInId)
+      .txOut(myAddress[0], [{ unit: "lovelace", quantity: "2000000" }])
+      .changeAddress(changeAddress)
+      .complete();
+    const builtTx = mesh.completeSigning();
+    const signedTx = await wallet.signTx(builtTx, false);
+    const txHash = await wallet.submitTx(signedTx);
+    console.log("TXHASH", txHash);
+  };
+
   return (
     <main>
+      <span className="text-black">Connected: {connected ? "Yes" : "No"}</span>
+      <button
+        className="m-2 p-2 bg-slate-500"
+        onClick={() => {
+          connect("eternl");
+        }}>
+        Connect Eternl
+      </button>
+
       <button className="m-2 p-2 bg-slate-500" onClick={getAlwaysSucceedAddress}>
         Get always succeed address
       </button>
@@ -98,7 +139,9 @@ export default function Home() {
       <button className="m-2 p-2 bg-slate-500" onClick={unlockExample102AndMintAlwaysSucceed}>
         Unlock from + Mint Always Succeed
       </button>
-      <button className="m-2 p-2 bg-slate-500">Frontend Tx</button>
+      <button className="m-2 p-2 bg-slate-500" onClick={frontendTx}>
+        Frontend Tx
+      </button>
       <button className="m-2 p-2 bg-slate-500" onClick={() => queryUtxos(walletAddress)}>
         Query
       </button>
