@@ -2,7 +2,6 @@ import { Demo } from "../transactions/demo";
 import { MaestroProvider, MeshTxBuilder, MeshTxBuilderBody, UTxO, resolvePaymentKeyHash } from "@meshsdk/core";
 import { useWalletList, useWallet, CardanoWallet } from "@meshsdk/react";
 
-const maestro = new MaestroProvider({ apiKey: process.env.NEXT_PUBLIC_MAESTRO_APIKEY!, network: "Preprod" });
 const walletAddress = process.env.NEXT_PUBLIC_WALLET_ADDRESS!;
 const skey = process.env.NEXT_PUBLIC_SKEY!;
 
@@ -26,6 +25,10 @@ export default function Home() {
     });
   };
 
+  const maestro = new MaestroProvider({
+    network: "Preprod",
+    apiKey: process.env.NEXT_PUBLIC_MAESTRO_APIKEY!,
+  });
   const mesh = new MeshTxBuilder({
     fetcher: maestro,
     submitter: maestro,
@@ -46,7 +49,7 @@ export default function Home() {
   };
 
   const sendFundToSelf = async () => {
-    const utxo = await getUtxosWithMinLovelace(2000000);
+    const utxo = await getUtxosWithMinLovelace(10000000);
     const txInHash = utxo[0].input.txHash;
     const txInId = utxo[0].input.outputIndex;
     const txHash = await demo.sendFundToSelf(txInHash, txInId, 5000000);
@@ -176,7 +179,7 @@ export default function Home() {
         Get always succeed address
       </button>
       <button className="m-2 p-2 bg-slate-500" onClick={sendFundToSelf}>
-        Send To Self
+        Send Fund To Self
       </button>
       <button className="m-2 p-2 bg-slate-500" onClick={example102}>
         Send To Always Succeed
@@ -196,9 +199,9 @@ export default function Home() {
       <button className="m-2 p-2 bg-slate-500" onClick={buildTxFromObject}>
         Build Tx From Object
       </button>
-      <button className="m-2 p-2 bg-slate-500" onClick={() => queryUtxos(walletAddress)}>
+      {/* <button className="m-2 p-2 bg-slate-500" onClick={() => queryUtxos(walletAddress)}>
         Query
-      </button>
+      </button> */}
     </main>
   );
 }
